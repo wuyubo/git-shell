@@ -1,0 +1,98 @@
+#!/bin/sh
+temp_path="../checkout_Temp"
+git_st="$temp_path/list.txt"
+list=$*
+argc=$#
+arg=$1
+df_list=()
+
+function diff()
+{
+    git diff $1
+}
+
+function tips()
+{
+        echo ' '
+        echo '    gi-df [-r/d...] [fileNamelist]...'
+        echo ' '
+        echo '    -r retain 保留参数列表的文件，git diff其git st 的文件'
+        echo '    -t target git diff 参数列表的文件'
+        echo '    -a/无参数  与git diff功能一样'
+        echo '    -c cache  diff已经add在缓冲里的文件'
+        echo '    -s stat   与git diff --stat一样'
+        echo ' tips: 能够模糊搜索，fileNamelist 只需要做文件路径中的一个单词即可'
+        echo '    如：aps/customer/customer_dir/tcl/customer_tcl.h'
+        echo '    gi-df -t tcl'
+        echo '  '
+}
+
+
+function get_git_st()
+{
+    git st | sed 's/^ M //g' | sed 's/^ D //g' | sed 's/^MM //g'| sed 's/^UU //g'> $git_st
+  
+    index=0
+    echo "check files in cache:"
+    for v in ${list[@]}
+    do
+        if [ $index -eq 0 ]
+        then
+                let index++
+                continue
+        fi
+        v=$(grep $v $git_st)
+        if echo $v|grep '^M '
+        then
+          continue 
+        fi
+        df_list[$index-1]=$v
+        let index++
+    done
+    echo 'check end'
+}
+
+function git_diff()
+{
+
+    if [ $arg = '-r' ]
+    then
+        for v in $(cat $git_st)           
+        do
+                if ! [[ "${df_list[@]}" =~ $v ]]
+                then 
+                        diff $v
+                fi
+        done
+    elif [ $arg = '-t' ]
+    then
+        for v in ${df_list[@]}
+        do
+                diff $v
+        done
+    elif [ $arg = '-a' ]
+    then
+          git diff
+    elif [ $arg = '-c' ]
+    then
+          git diff --cached
+    elif [ $arg = '-s' ]
+    then
+          git diff --stat
+    fi
+}
+
+if [ $argc -lt 1 ]
+then
+    git diff
+    exit
+fi
+
+if [ $arg = '-help' ]
+then
+   tips
+   exit
+fi
+
+get_git_st
+git_diff

@@ -1,0 +1,112 @@
+#!/bin/sh
+
+
+function add()
+{
+        echo 'add '$1
+        git add $1
+}
+
+
+temp_path="../checkout_Temp"
+git_st="$temp_path/list.txt"
+list=$*
+argc=$#
+arg=$1
+ci_list=()
+git st | sed 's/^ M //g' > $git_st
+
+function tips()
+{
+        echo ' '
+        echo '    gi-co [-a/r...] [fileNamelist]...'
+        echo ' '
+        echo '    -r retain 保留参数列表的文件，commit其git st 的文件'
+        echo '    -a add 参数列表的文件'
+        echo '    -u 与git add -u 功能一样'
+        echo ' tips: 能够模糊搜索，fileNamelist 只需要做文件路径中的一个单词即可'
+        echo '    如：aps/customer/customer_dir/tcl/customer_tcl.h'
+        echo '    gi-co -a tcl'
+        echo '  '
+}
+
+function check_dirs_files()
+{
+   if [ ! -d $temp_path ]
+   then
+      mkdir "$temp_path"
+   fi
+   if [ ! -f $git_st ]
+   then
+      touch "$git_st"
+   fi
+   if [ ! -d $temp_files ]
+   then
+        mkdir "$temp_files"
+   fi
+}
+
+function get_git_st()
+{
+    git st | sed 's/^ M //g' | sed 's/^ D //g' | sed 's/^MM //g' | sed 's/^UU //g'> $git_st
+  
+    index=0
+    echo "check files in cache:"
+    for v in ${list[@]}
+    do
+        if [ $index -eq 0 ]
+        then
+                let index++
+                continue
+        fi
+        v=$(grep $v $git_st)
+        if echo $v|grep '^M '
+        then
+          continue 
+        fi
+        ci_list[$index-1]=$v
+        let index++
+    done
+    echo 'check end'
+}
+
+function git_commit()
+{
+
+    if [ $arg = '-r' ]
+    then
+        for v in $(cat $git_st)           
+        do
+                if ! [[ "${ci_list[@]}" =~ $v ]]
+                then 
+                        add $v
+                fi
+        done
+    elif [ $arg = '-a' ]
+    then
+        for v in ${ci_list[@]}
+        do
+                if [ $v == '-a' ]
+                then 
+                        continue
+                fi
+                add $v
+        done
+    elif [ $arg = '-u' ]
+    then
+          git add -u
+    fi
+}
+
+if [ $argc -lt 1 ]
+then
+     tips
+     exit
+fi
+
+check_dirs_files
+get_git_st
+echo 'begin add'
+git_commit
+echo 'end'
+

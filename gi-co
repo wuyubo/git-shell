@@ -1,0 +1,126 @@
+#!/bin/sh
+temp_path="../checkout_Temp"
+git_st="$temp_path/list.txt"
+list=$*
+temp_files="$temp_path/temp-files"
+argc=$#
+arg=$1
+co_list=()
+
+function tips()
+{
+        echo ' '
+        echo '    gi-co [-r/d...] [fileNamelist]...'
+        echo ' '
+        echo '    -r retain 保留参数列表的文件，checkout其git st 的文件'
+        echo '    -d delete checkout 参数列表的文件'
+        echo '    -a checkout所有修改过的文件'
+        echo ' tips: 能够模糊搜索，fileNamelist 只需要做文件路径中的一个单词即可'
+        echo '    如：aps/customer/customer_dir/tcl/customer_tcl.h'
+        echo '    gi-co -d tcl'
+        echo '    checkout 的文件都备份在'$temp_files
+        echo '  '
+}
+
+
+
+function check_dirs_files()
+{
+   if [ ! -d $temp_path ]
+   then
+      mkdir "$temp_path"
+   fi
+   if [ ! -f $git_st ]
+   then
+      touch "$git_st"
+   fi
+   if [ ! -d $temp_files ]
+   then
+        mkdir "$temp_files"
+   fi
+}
+
+
+function copy_to_temp_dir()
+{
+        if [ ! -f "$1" ]
+        then
+            return;
+        fi
+	cp $1 "$temp_files"
+}
+
+function checkout()
+{
+ 	echo "checkout "$1
+	copy_to_temp_dir $1
+	git checkout $1
+}
+
+function get_git_st()
+{	   
+    git st | sed 's/^ M //g'| sed 's/^ D //g' | sed 's/^MM //g'| sed 's/^UU //g' > $git_st   
+
+    index=0
+    for v in ${list[@]}
+    do
+	if [ $index -eq 0 ]
+	then
+		let index++
+		continue 
+	fi
+	v=$(grep $v $git_st)
+       
+	co_list[$index-1]=$v
+	let index++
+    done
+}
+
+function git_checkout_list()
+{
+
+    if [ $arg = '-r' ]
+    then
+	for v in $(cat $git_st)         
+	do
+		if ! [[ "${co_list[@]}" =~ $v ]]
+		then 
+			checkout $v
+		fi
+	done
+
+    elif [ $arg = '-d' ]
+    then
+	for v in ${co_list[@]}
+	do
+		checkout $v
+	done
+
+    elif [ $arg = '-a' ]
+    then
+	for v in  $(cat $git_st)
+	do
+		checkout $v
+	done
+    fi
+}
+
+if [ $argc -lt 1 ]
+then
+	tips
+	exit
+fi
+
+if [ $arg = '-help' ]
+then
+       tips
+       exit
+fi
+
+check_dirs_files
+get_git_st
+echo 'begin chekout'
+git_checkout_list
+echo 'end'
+
+

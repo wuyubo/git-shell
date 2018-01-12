@@ -1,0 +1,11 @@
+#!/bin/sh
+
+make $*
+default_bin="/home/wuyubo/code/bin"
+if [ ! -d $default_bin ]
+then
+      mkdir "$default_bin"
+else
+      rm $default_bin/*.bin
+fi
+cp ./bin/*  $default_bin

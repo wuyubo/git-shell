@@ -1,0 +1,20 @@
+#!/bin/sh
+
+commit="./commit.template"
+(
+cat << EOF  
+[bugfix/feature/config][][]
+
+[what]
+[why]
+[how]    
+EOF
+) > $commit
+
+
+cp $commit ~/.gitmessage
+git config --global commit.template ~/.gitmessage
+
+echo "preset success"
+cat $commit
+

@@ -1,0 +1,9 @@
+#!/bin/sh
+temp_path="../checkout_Temp"
+git_st="$temp_path/list.txt"
+temp_files="$temp_path/temp-files"
+source=$1
+target=""
+cat $git_st | grep $source | sed 's/^ M //g'| sed 's/^ D //g' | sed 's/^MM //g'| sed 's/^UU //g' << $target
+echo $target
+#cp $temp_files/$source $target
