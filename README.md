@@ -59,6 +59,9 @@ gi-df [-r/d...] [fileNamelist]...
 [how]
 
 只需执行一次
+5. freplace、creplace
+- 功能
+   批量修改文件名/字符串
 
 三、结束
 - tips：可以把这些文件copy到一个文件夹下如（~/git_tools), 然后export PATH=~/git_tools:$PATH，即可使用。把命令export PATH=~/git_tools:$PATH加到.bashrc中，就可以永久使用。

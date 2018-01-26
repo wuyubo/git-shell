@@ -1,0 +1,18 @@
+#!/bin/bash
+if [ $# -lt 2 ]
+then
+	echo "freplace source target"
+        echo "source:  old string in file name"
+        echo "target:  new string in file name"
+        echo "eg. freplace  Haier  Tongfang"
+	exit
+fi
+src=$1
+tag=$2
+for file in `find -iname "*$src*"`
+do
+        newfile=`echo $file | sed "s/$src/$tag/g"`
+        mv $file $newfile 
+	echo $file"->"$newfile
+done
+
